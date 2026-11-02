@@ -3,82 +3,206 @@
 <html lang="id">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <title>LUDO POWER BY INI NAKY</title>
 <style>
 *{box-sizing:border-box}
 body{
  margin:0;background:#10101b;color:white;
- font-family:Arial,sans-serif;text-align:center;
+ font-family:Arial;text-align:center;
 }
-header{padding:25px 10px;color:#e8bd58}
-h1{font-size:25px;margin:5px}
-main{max-width:520px;margin:auto;padding:15px}
-.board{
- display:grid;grid-template-columns:repeat(15,1fr);
- aspect-ratio:1;background:#fff;
- border:5px solid #d6ac4b;border-radius:12px;
- overflow:hidden;
+header{padding:22px;color:#e7bd63}
+h1{margin:4px;font-size:25px}
+main{max-width:550px;margin:auto;padding:12px}
+.panel{
+ background:#222238;padding:15px;
+ border:1px solid #b99043;border-radius:15px;
+ margin:12px 0;
 }
-.cell{border:1px solid #ddd;display:flex;
- align-items:center;justify-content:center;
- font-size:clamp(8px,2vw,15px)}
-.red{background:#e94b50}
-.blue{background:#3979e8}
-.green{background:#35b66c}
-.yellow{background:#f5cf42}
-.center{background:#d6ac4b;color:#17121d}
-.panel{background:#202033;padding:15px;
- border-radius:15px;margin-top:15px}
+.players{
+ display:grid;grid-template-columns:1fr 1fr;gap:9px;
+}
+.player{
+ padding:12px;border-radius:10px;
+ background:#303047;border:2px solid transparent;
+}
+.active{border-color:#e8bd58}
+.red{color:#ff6565}
+.blue{color:#65a5ff}
+.yellow{color:#ffdf63}
+.green{color:#64df92}
+.dice{font-size:55px;color:#e8bd58}
 button{
- border:0;border-radius:10px;padding:13px 22px;
- background:#d6ac4b;color:#17121d;
- font-weight:bold;font-size:16px;margin:8px;
+ border:0;border-radius:9px;padding:12px;
+ margin:5px;background:#d6ac4b;
+ color:#17121d;font-weight:bold;
 }
-#dice{font-size:38px;color:#e8bd58}
+button:disabled{opacity:.4}
+.tokens{display:flex;flex-wrap:wrap;justify-content:center}
+.token{
+ min-width:65px;background:#34344d;color:white;
+ border:1px solid #aaa;padding:12px 5px;
+}
+.track{
+ display:grid;grid-template-columns:repeat(13,1fr);
+ gap:3px;margin:15px 0;
+}
+.space{
+ aspect-ratio:1;border-radius:5px;
+ background:#303047;display:flex;
+ align-items:center;justify-content:center;
+ font-size:10px;overflow:hidden;
+}
+.space.occupied{background:#a98235;color:#111}
+small{color:#ccc}
 </style>
 </head>
 <body>
 <header>
-<h1>♛ LUDO POWER</h1>
-<p>BY INI NAKY</p>
+<div style="font-size:28px">♛</div>
+<h1>LUDO POWER</h1>
+<strong>BY INI NAKY</strong>
+<p>PREMIUM LUDO GAME</p>
 </header>
 <main>
-<div class="board" id="board"></div>
 <div class="panel">
-<h3>LEMpar DADU</h3>
-<div id="dice">🎲</div>
-<button onclick="rollDice()">LEMPAR DADU</button>
-<p id="status">Selamat bermain!</p>
+<h3>PEMAIN</h3>
+<div class="players" id="players"></div>
 </div>
+<div class="panel">
+<h3>PAPAN PERMAINAN</h3>
+<div class="track" id="track"></div>
+<small>Jalur permainan 52 langkah</small>
+</div>
+<div class="panel">
+<h3 id="turn">Giliran Merah</h3>
+<div class="dice" id="dice">🎲</div>
+<button onclick="roll()">LEMPAR DADU</button>
+<p id="message">Lempar dadu untuk mulai bermain.</p>
+</div>
+<div class="panel">
+<h3>PILIH BIDAK</h3>
+<div class="tokens" id="tokens"></div>
+<small>Angka 6 diperlukan untuk mengeluarkan bidak.</small>
+</div>
+<button onclick="resetGame()">ULANG PERMAINAN</button>
 </main>
 <script>
-const board=document.getElementById("board");
+const names=["Merah","Biru","Kuning","Hijau"];
 const colors=["red","blue","yellow","green"];
-for(let r=0;r<15;r++){
- for(let c=0;c<15;c++){
-  let el=document.createElement("div");
-  el.className="cell";
-  if(r<6&&c<6)el.classList.add("red");
-  else if(r<6&&c>8)el.classList.add("blue");
-  else if(r>8&&c<6)el.classList.add("green");
-  else if(r>8&&c>8)el.classList.add("yellow");
-  else if(r>=6&&r<=8&&c>=6&&c<=8){
-   el.classList.add("center");
-   if(r===7&&c===7)el.textContent="♛";
-  }
-  board.appendChild(el);
+const icons=["🔴","🔵","🟡","🟢"];
+let players=[];
+let turn=0,dice=0,waiting=false,finished=false;
+
+function init(){
+ players=names.map(()=>({
+  tokens:[-1,-1,-1,-1],done:0
+ }));
+ turn=0;dice=0;waiting=false;finished=false;
+ render();
+ say("Lempar dadu untuk memulai permainan.");
+}
+function say(t){
+ document.getElementById("message").textContent=t;
+}
+function render(){
+ document.getElementById("players").innerHTML=
+ players.map((p,i)=>`
+ <div class="player ${colors[i]} ${turn===i?"active":""}">
+ <b>${icons[i]} ${names[i]}</b>
+ <p>Bidak selesai: ${p.done}/4</p>
+ </div>`).join("");
+
+ document.getElementById("turn").textContent=
+ "Giliran "+names[turn];
+
+ document.getElementById("dice").textContent=
+ dice?["","⚀","⚁","⚂","⚃","⚄","⚅"][dice]:"🎲";
+
+ document.getElementById("tokens").innerHTML=
+ players[turn].tokens.map((v,i)=>`
+ <button class="token"
+ onclick="move(${i})"
+ ${!waiting||v===57?"disabled":""}>
+ ${icons[turn]} ${i+1}<br>
+ ${v<0?"Rumah":v===57?"Finish":v+"/57"}
+ </button>`).join("");
+
+ let track=document.getElementById("track");
+ track.innerHTML="";
+ for(let n=0;n<52;n++){
+  let occupants=[];
+  players.forEach((p,i)=>p.tokens.forEach((v,j)=>{
+   if(v>=0&&v<57&&((v+i*13)%52)===n)
+    occupants.push(icons[i]);
+  }));
+  let cell=document.createElement("div");
+  cell.className="space "+(occupants.length?"occupied":"");
+  cell.textContent=occupants.join("")||n+1;
+  track.appendChild(cell);
  }
 }
-let turn=0;
-function rollDice(){
- let n=Math.floor(Math.random()*6)+1;
- document.getElementById("dice").textContent=
- ["","⚀","⚁","⚂","⚃","⚄","⚅"][n];
- document.getElementById("status").textContent=
- "Dadu: "+n+" | Giliran: "+colors[turn];
- turn=(turn+1)%4;
+function roll(){
+ if(waiting||finished)return;
+ dice=Math.floor(Math.random()*6)+1;
+ waiting=true;
+ render();
+ let options=players[turn].tokens
+ .map((v,i)=>({v,i}))
+ .filter(x=>x.v<57&&
+ (x.v>=0||dice===6)&&x.v+dice<=57);
+ if(options.length===0){
+  say("Tidak ada bidak yang bisa bergerak.");
+  waiting=false;
+  setTimeout(nextTurn,1000);
+ }else{
+  say("Dadu "+dice+". Pilih bidak yang ingin digerakkan.");
+ }
+ render();
 }
+function move(i){
+ if(!waiting)return;
+ let p=players[turn];
+ let v=p.tokens[i];
+ if(v===-1&&dice!==6)return;
+ let next=v<0?0:v+dice;
+ if(next>57)return;
+ p.tokens[i]=next;
+ if(next===57){
+  p.done++;
+  say(names[turn]+" berhasil menyelesaikan satu bidak!");
+ }else{
+  let global=(next+turn*13)%52;
+  players.forEach((other,pi)=>{
+   if(pi===turn)return;
+   other.tokens.forEach((pos,j)=>{
+    if(pos>=0&&pos<57&&
+    (pos+pi*13)%52===global){
+     other.tokens[j]=-1;
+     say("Bidak "+names[pi]+" kembali ke rumah!");
+    }
+   });
+  });
+ }
+ waiting=false;
+ if(p.done===4){
+  finished=true;
+  say("🏆 "+names[turn]+" MENANG!");
+  render();return;
+ }
+ if(dice!==6)nextTurn();
+ else say("Angka 6! Kamu mendapat giliran tambahan.");
+ render();
+}
+function nextTurn(){
+ turn=(turn+1)%4;
+ dice=0;waiting=false;
+ render();
+}
+function resetGame(){
+ init();
+}
+init();
 </script>
 </body>
 </html>
