@@ -1,0 +1,84 @@
+
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LUDO POWER BY INI NAKY</title>
+<style>
+*{box-sizing:border-box}
+body{
+ margin:0;background:#10101b;color:white;
+ font-family:Arial,sans-serif;text-align:center;
+}
+header{padding:25px 10px;color:#e8bd58}
+h1{font-size:25px;margin:5px}
+main{max-width:520px;margin:auto;padding:15px}
+.board{
+ display:grid;grid-template-columns:repeat(15,1fr);
+ aspect-ratio:1;background:#fff;
+ border:5px solid #d6ac4b;border-radius:12px;
+ overflow:hidden;
+}
+.cell{border:1px solid #ddd;display:flex;
+ align-items:center;justify-content:center;
+ font-size:clamp(8px,2vw,15px)}
+.red{background:#e94b50}
+.blue{background:#3979e8}
+.green{background:#35b66c}
+.yellow{background:#f5cf42}
+.center{background:#d6ac4b;color:#17121d}
+.panel{background:#202033;padding:15px;
+ border-radius:15px;margin-top:15px}
+button{
+ border:0;border-radius:10px;padding:13px 22px;
+ background:#d6ac4b;color:#17121d;
+ font-weight:bold;font-size:16px;margin:8px;
+}
+#dice{font-size:38px;color:#e8bd58}
+</style>
+</head>
+<body>
+<header>
+<h1>♛ LUDO POWER</h1>
+<p>BY INI NAKY</p>
+</header>
+<main>
+<div class="board" id="board"></div>
+<div class="panel">
+<h3>LEMpar DADU</h3>
+<div id="dice">🎲</div>
+<button onclick="rollDice()">LEMPAR DADU</button>
+<p id="status">Selamat bermain!</p>
+</div>
+</main>
+<script>
+const board=document.getElementById("board");
+const colors=["red","blue","yellow","green"];
+for(let r=0;r<15;r++){
+ for(let c=0;c<15;c++){
+  let el=document.createElement("div");
+  el.className="cell";
+  if(r<6&&c<6)el.classList.add("red");
+  else if(r<6&&c>8)el.classList.add("blue");
+  else if(r>8&&c<6)el.classList.add("green");
+  else if(r>8&&c>8)el.classList.add("yellow");
+  else if(r>=6&&r<=8&&c>=6&&c<=8){
+   el.classList.add("center");
+   if(r===7&&c===7)el.textContent="♛";
+  }
+  board.appendChild(el);
+ }
+}
+let turn=0;
+function rollDice(){
+ let n=Math.floor(Math.random()*6)+1;
+ document.getElementById("dice").textContent=
+ ["","⚀","⚁","⚂","⚃","⚄","⚅"][n];
+ document.getElementById("status").textContent=
+ "Dadu: "+n+" | Giliran: "+colors[turn];
+ turn=(turn+1)%4;
+}
+</script>
+</body>
+</html>
