@@ -8,201 +8,250 @@
 <style>
 *{box-sizing:border-box}
 body{
- margin:0;background:#10101b;color:white;
- font-family:Arial;text-align:center;
+ margin:0;background:radial-gradient(circle,#29243a,#090912);
+ color:white;font-family:Arial,sans-serif;text-align:center;
 }
-header{padding:22px;color:#e7bd63}
-h1{margin:4px;font-size:25px}
-main{max-width:550px;margin:auto;padding:12px}
+header{padding:22px 10px;color:#eac66f}
+header h1{margin:5px;font-size:27px;letter-spacing:2px}
+header p{font-size:11px;letter-spacing:4px}
+main{max-width:520px;margin:auto;padding:12px}
 .panel{
- background:#222238;padding:15px;
- border:1px solid #b99043;border-radius:15px;
- margin:12px 0;
+ background:linear-gradient(145deg,#29283b,#151522);
+ border:1px solid #b9944c;border-radius:16px;
+ padding:13px;margin:12px 0;
+ box-shadow:0 5px 15px #0008;
 }
-.players{
- display:grid;grid-template-columns:1fr 1fr;gap:9px;
-}
+.players{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .player{
- padding:12px;border-radius:10px;
- background:#303047;border:2px solid transparent;
+ border:2px solid #555;padding:10px;border-radius:10px;
+ background:#242438;
 }
-.active{border-color:#e8bd58}
-.red{color:#ff6565}
-.blue{color:#65a5ff}
-.yellow{color:#ffdf63}
-.green{color:#64df92}
-.dice{font-size:55px;color:#e8bd58}
+.active{border-color:#f1c66a;box-shadow:0 0 12px #eac66f66}
+.red{color:#ff6969}
+.blue{color:#72a9ff}
+.yellow{color:#ffe16c}
+.green{color:#65e49c}
+.board{
+ display:grid;grid-template-columns:repeat(14,1fr);
+ gap:2px;background:#080812;padding:5px;
+ border:3px solid #d4ae62;border-radius:12px;
+ box-shadow:0 7px 20px #0009;
+}
+.cell{
+ aspect-ratio:1;border-radius:3px;
+ background:#29283c;display:flex;
+ align-items:center;justify-content:center;
+ font-size:clamp(8px,2.6vw,15px);
+ box-shadow:inset 0 1px 3px #ffffff22;
+}
+.track{background:#eee4c9;color:#222}
+.home-red{background:#a93645}
+.home-blue{background:#245ba7}
+.home-yellow{background:#b78d23}
+.home-green{background:#247c50}
+.center{background:linear-gradient(135deg,#f7d98b,#9e722e);color:#17121d}
+.dice{font-size:55px;color:#f3d181}
 button{
- border:0;border-radius:9px;padding:12px;
- margin:5px;background:#d6ac4b;
- color:#17121d;font-weight:bold;
+ background:linear-gradient(135deg,#f5d68b,#b78b3e);
+ color:#17121d;border:0;border-radius:10px;
+ padding:12px 16px;margin:5px;font-weight:bold;
+ box-shadow:0 4px 0 #75521e;
 }
+button:active{transform:translateY(3px);box-shadow:none}
 button:disabled{opacity:.4}
 .tokens{display:flex;flex-wrap:wrap;justify-content:center}
-.token{
- min-width:65px;background:#34344d;color:white;
- border:1px solid #aaa;padding:12px 5px;
-}
-.track{
- display:grid;grid-template-columns:repeat(13,1fr);
- gap:3px;margin:15px 0;
-}
-.space{
- aspect-ratio:1;border-radius:5px;
- background:#303047;display:flex;
- align-items:center;justify-content:center;
- font-size:10px;overflow:hidden;
-}
-.space.occupied{background:#a98235;color:#111}
-small{color:#ccc}
+.token{min-width:65px}
+.status{color:#f5d68b;min-height:24px}
+footer{color:#aaa;font-size:11px;padding:18px}
 </style>
 </head>
 <body>
 <header>
-<div style="font-size:28px">♛</div>
+<div style="font-size:35px">♛</div>
 <h1>LUDO POWER</h1>
 <strong>BY INI NAKY</strong>
-<p>PREMIUM LUDO GAME</p>
+<p>PREMIUM BOARD GAME</p>
 </header>
 <main>
 <div class="panel">
-<h3>PEMAIN</h3>
+<h3>♛ PLAYER ARENA</h3>
 <div class="players" id="players"></div>
 </div>
+
 <div class="panel">
-<h3>PAPAN PERMAINAN</h3>
-<div class="track" id="track"></div>
-<small>Jalur permainan 52 langkah</small>
+<h3>GAME BOARD</h3>
+<div class="board" id="board"></div>
 </div>
+
 <div class="panel">
-<h3 id="turn">Giliran Merah</h3>
+<h3 id="turn">GILIRAN MERAH</h3>
 <div class="dice" id="dice">🎲</div>
-<button onclick="roll()">LEMPAR DADU</button>
-<p id="message">Lempar dadu untuk mulai bermain.</p>
+<button onclick="roll()">🎲 LEMPAR DADU</button>
+<div class="status" id="message">Selamat datang di arena Ludo!</div>
 </div>
+
 <div class="panel">
 <h3>PILIH BIDAK</h3>
 <div class="tokens" id="tokens"></div>
-<small>Angka 6 diperlukan untuk mengeluarkan bidak.</small>
+<p style="font-size:11px;color:#bbb">
+Dapatkan angka 6 untuk keluar dari rumah.
+</p>
 </div>
-<button onclick="resetGame()">ULANG PERMAINAN</button>
+<button onclick="resetGame()">↻ ULANG PERMAINAN</button>
 </main>
+<footer>POWER BY INI NAKY • ORIGINAL GAME</footer>
+
 <script>
 const names=["Merah","Biru","Kuning","Hijau"];
 const colors=["red","blue","yellow","green"];
 const icons=["🔴","🔵","🟡","🟢"];
-let players=[];
-let turn=0,dice=0,waiting=false,finished=false;
+
+let players=[],turn=0,dice=0,waiting=false,finished=false;
+
+const path=[];
+for(let c=0;c<14;c++)path.push([0,c]);
+for(let r=1;r<14;r++)path.push([r,13]);
+for(let c=12;c>=0;c--)path.push([13,c]);
+for(let r=12;r>=1;r--)path.push([r,0]);
 
 function init(){
- players=names.map(()=>({
-  tokens:[-1,-1,-1,-1],done:0
- }));
+ players=names.map(()=>({tokens:[-1,-1,-1,-1],done:0}));
  turn=0;dice=0;waiting=false;finished=false;
  render();
- say("Lempar dadu untuk memulai permainan.");
+ say("Lempar dadu untuk memulai!");
 }
+
 function say(t){
  document.getElementById("message").textContent=t;
 }
+
 function render(){
  document.getElementById("players").innerHTML=
  players.map((p,i)=>`
- <div class="player ${colors[i]} ${turn===i?"active":""}">
+ <div class="player ${turn===i?"active":""} ${colors[i]}">
  <b>${icons[i]} ${names[i]}</b>
- <p>Bidak selesai: ${p.done}/4</p>
+ <p>Finish: ${p.done}/4</p>
  </div>`).join("");
 
  document.getElementById("turn").textContent=
- "Giliran "+names[turn];
+ "GILIRAN "+names[turn].toUpperCase();
 
  document.getElementById("dice").textContent=
  dice?["","⚀","⚁","⚂","⚃","⚄","⚅"][dice]:"🎲";
 
  document.getElementById("tokens").innerHTML=
  players[turn].tokens.map((v,i)=>`
- <button class="token"
- onclick="move(${i})"
+ <button class="token" onclick="move(${i})"
  ${!waiting||v===57?"disabled":""}>
  ${icons[turn]} ${i+1}<br>
- ${v<0?"Rumah":v===57?"Finish":v+"/57"}
+ ${v<0?"RUMAH":v===57?"FINISH":v+"/57"}
  </button>`).join("");
 
- let track=document.getElementById("track");
- track.innerHTML="";
- for(let n=0;n<52;n++){
-  let occupants=[];
-  players.forEach((p,i)=>p.tokens.forEach((v,j)=>{
-   if(v>=0&&v<57&&((v+i*13)%52)===n)
-    occupants.push(icons[i]);
-  }));
-  let cell=document.createElement("div");
-  cell.className="space "+(occupants.length?"occupied":"");
-  cell.textContent=occupants.join("")||n+1;
-  track.appendChild(cell);
+ let board=document.getElementById("board");
+ board.innerHTML="";
+
+ for(let r=0;r<14;r++){
+  for(let c=0;c<14;c++){
+   let el=document.createElement("div");
+   el.className="cell";
+
+   if(r<6&&c<6)el.classList.add("home-red");
+   if(r<6&&c>=8)el.classList.add("home-blue");
+   if(r>=8&&c<6)el.classList.add("home-green");
+   if(r>=8&&c>=8)el.classList.add("home-yellow");
+
+   let index=path.findIndex(p=>p[0]===r&&p[1]===c);
+   if(index>=0)el.className="cell track";
+
+   let occupants=[];
+   players.forEach((p,i)=>{
+    p.tokens.forEach(v=>{
+     if(v>=0&&v<52){
+      let pos=(v+i*13)%52;
+      if(pos===index)occupants.push(icons[i]);
+     }
+    });
+   });
+
+   if(occupants.length)el.textContent=occupants.join("");
+   else if(index>=0)el.textContent="●";
+
+   if(r===6&&c===6||r===7&&c===7){
+    el.className="cell center";
+    el.textContent="♛";
+   }
+
+   board.appendChild(el);
+  }
  }
 }
+
 function roll(){
  if(waiting||finished)return;
  dice=Math.floor(Math.random()*6)+1;
  waiting=true;
- render();
- let options=players[turn].tokens
- .map((v,i)=>({v,i}))
- .filter(x=>x.v<57&&
- (x.v>=0||dice===6)&&x.v+dice<=57);
- if(options.length===0){
-  say("Tidak ada bidak yang bisa bergerak.");
+
+ let options=players[turn].tokens.filter(v=>
+  v<57&&(v>=0||dice===6)&&v+dice<=57);
+
+ if(!options.length){
   waiting=false;
-  setTimeout(nextTurn,1000);
- }else{
-  say("Dadu "+dice+". Pilih bidak yang ingin digerakkan.");
+  say("Tidak ada bidak yang bisa bergerak.");
+  render();
+  setTimeout(nextTurn,1100);
+  return;
  }
+
+ say("Dadu "+dice+". Pilih bidak!");
  render();
 }
+
 function move(i){
  if(!waiting)return;
+
  let p=players[turn];
  let v=p.tokens[i];
- if(v===-1&&dice!==6)return;
+
+ if(v<0&&dice!==6)return;
  let next=v<0?0:v+dice;
  if(next>57)return;
+
  p.tokens[i]=next;
+ waiting=false;
+
  if(next===57){
   p.done++;
-  say(names[turn]+" berhasil menyelesaikan satu bidak!");
+  say("Hebat! Satu bidak berhasil finish.");
  }else{
-  let global=(next+turn*13)%52;
-  players.forEach((other,pi)=>{
-   if(pi===turn)return;
-   other.tokens.forEach((pos,j)=>{
-    if(pos>=0&&pos<57&&
-    (pos+pi*13)%52===global){
-     other.tokens[j]=-1;
-     say("Bidak "+names[pi]+" kembali ke rumah!");
-    }
-   });
-  });
+  say(names[turn]+" berhasil bergerak "+dice+" langkah.");
  }
- waiting=false;
+
  if(p.done===4){
   finished=true;
   say("🏆 "+names[turn]+" MENANG!");
-  render();return;
+  render();
+  return;
  }
- if(dice!==6)nextTurn();
- else say("Angka 6! Kamu mendapat giliran tambahan.");
+
  render();
+
+ if(dice!==6)setTimeout(nextTurn,900);
+ else say("Angka 6! Giliran tambahan.");
 }
+
 function nextTurn(){
+ if(finished)return;
  turn=(turn+1)%4;
  dice=0;waiting=false;
  render();
 }
+
 function resetGame(){
  init();
 }
+
 init();
 </script>
 </body>
 </html>
+
